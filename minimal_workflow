@@ -1,0 +1,43 @@
+# RNA-seq workflow and software commands
+# April 2018
+# Michigan State University
+
+DIR=("/mnt/home/usr/foo")
+REFDIR=("/mnt/home/usr/ref_genome") # location of reference genomes
+BIN=("/mnt/home/usr/bin")
+samples=("foo_treat1 foo_treat2 foo_treatn foo_control1 foo_control2 foo_controln")
+
+#########################
+
+cd ${DIR}
+
+# remove excess filename architecture, paired end reads
+for i in $samples;
+do mv ${i}_L000_R1_001.fastq.gz ${i}_R1.fastq.gz;
+mv ${i}_L000_R2_001.fastq.gz ${i}_R2.fastq.gz;
+done
+
+#########################
+# fastqc on raw files
+for i in $samples;
+do fastqc ${i}_R1.fastq.gz;
+fastqc ${i}_R2.fastq.gz;
+done
+
+##########################
+# make trimmed output directory
+mkdir trimmed
+
+# trim galore
+for i in $samples;
+do trim_galore --paired -o trimmed/ ${i}_R1.fastq.gz ${i}_R2.fastq.gz;
+done
+
+cd trimmed
+
+##########################
+# fastqc on trimmed files
+for i in $samples;
+do fastqc ${i}_R1_trimmed.fq.gz;
+fastqc ${i}_R2_trimmed.fq.gz
+done
