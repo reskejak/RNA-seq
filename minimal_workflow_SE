@@ -26,14 +26,14 @@ done
 
 ##########################
 # make trimmed output directory
-mkdir trimmed
+mkdir ${DIR}/trimmed
 
 # trim galore
 for i in $samples;
 do trim_galore ${i}_R1.fastq.gz -o trimmed/ ;
 done
 
-cd trimmed
+cd ${DIR}/trimmed
 
 ##########################
 # fastqc on trimmed files
@@ -45,7 +45,7 @@ done
 # alignment via STAR
 module load star
 
-# index genome (upon first time using this genome/annotation with STAR)
+# index genome (upon first time using this genome/annotation/read-length with STAR)
 cd ${REFDIR}
 mkdir genome_STAR_index
 STAR --runMode genomeGenerate \
@@ -84,12 +84,12 @@ done
 R
 
 # read STAR output gene counts
-foo.treat1.counts <- read.table("12A1_ReadsPerGene.out.tab", sep="\t")
-foo.treat2.counts <- read.table("12A2_ReadsPerGene.out.tab", sep="\t")
-foo.treatn.counts <- read.table("12A3_ReadsPerGene.out.tab", sep="\t")
-foo.control1.counts <- read.table("12N1_ReadsPerGene.out.tab", sep="\t")
-foo.control2.counts <- read.table("12N2_ReadsPerGene.out.tab", sep="\t")
-foo.control3.counts <- read.table("12N3_ReadsPerGene.out.tab", sep="\t")
+foo.treat1.counts <- read.table("foo_treat1_ReadsPerGene.out.tab", sep="\t")
+foo.treat2.counts <- read.table("foo_treat2_ReadsPerGene.out.tab", sep="\t")
+foo.treatn.counts <- read.table("foo_treatn_ReadsPerGene.out.tab", sep="\t")
+foo.control1.counts <- read.table("foo_control1_ReadsPerGene.out.tab", sep="\t")
+foo.control2.counts <- read.table("foo_control2_ReadsPerGene.out.tab", sep="\t")
+foo.control3.counts <- read.table("foo_controln_ReadsPerGene.out.tab", sep="\t")
 
 # concatenate sample gene count files for Stranded-Reverse (libtype)
 counts <- cbind(foo.treat1.counts$V4, foo.treat2.counts$V4, foo.treatn.counts$V4, 
