@@ -1,5 +1,7 @@
 # Downstream gene-level analysis of RNA-seq data
-#
+# April 2018
+# Michigan State University
+# reskejak@msu.edu
 
 setwd("/mnt/usr/foo")
 
