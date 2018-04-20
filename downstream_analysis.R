@@ -199,7 +199,7 @@ resFinal.df.p.ordered <- resFinal.df[order(resFinal.df$padj.IHW), ]
 
 # write full output to csv
 write.csv(resFinal.df.p.ordered,
-          file=paste(prefix, "DESeq2_KO-vs-WT_results.csv", sep="_"))
+          file=paste(prefix, "DESeq2_treat-vs-control_results.csv", sep="_"))
 
 ##########################
 # convert final differential-expression results Ensembl IDs to symbols
@@ -218,7 +218,7 @@ converted.resFinal.df.p.ordered <- converted.resFinal.df[order(converted.resFina
 
 # write converted final differential-expression results table to CSV
 write.csv(converted.resFinal.df.p.ordered, 
-          file=paste(prefix, "DESeq2_KO-vs-WT_converted_results.csv", sep="_"))
+          file=paste(prefix, "DESeq2_treat-vs-control_converted_results.csv", sep="_"))
 
 ##############
 # filter by padj.IHW < 0.05 and corrected-|LFC| >= 1
@@ -229,7 +229,7 @@ resFinal.df.sig.p.ordered <- subset(resFinal.df.p.ordered,
                                     select = c(0:ncol(resFinal.df.p.ordered)))
 # write signature to csv
 write.csv(resFinal.df.sig.p.ordered, 
-          file=paste(prefix, "DESeq2_KO-vs-WT_signature-genes.csv", sep="_"))
+          file=paste(prefix, "DESeq2_treat-vs-control_signature-genes.csv", sep="_"))
 
 #################
 # convert signature genes differential-expression results from ensembl IDs to symbols
@@ -250,7 +250,7 @@ converted.resFinal.df.sig.p.ordered <- converted.resFinal.df.sig[order(converted
 
 # write converted signature to csv
 write.csv(converted.resFinal.df.sig.p.ordered, 
-          file=paste(prefix, "DESeq2_KO-vs-WT_converted_signature-genes.csv", sep="_"))
+          file=paste(prefix, "DESeq2_treat-vs-control_converted_signature-genes.csv", sep="_"))
 
 ######################
 # subset rlog.counts by signature genes for downstream plotting, etc.
@@ -305,11 +305,11 @@ sig.ht1 <- Heatmap(centered.scaled.converted.rlog.counts.sig,
                    name="scaled rlog(counts)",
                    width = unit(8, "cm"))
                           
-# png(paste(prefix, "DESeq2_rlog-counts_KO-vs-WT_signature-genes_clustering.png", sep="_"),
+# png(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering.png", sep="_"),
 #     height=500, 
 #     width=500, 
 #     units="px")
-pdf(paste(prefix, "DESeq2_rlog-counts_KO-vs-WT_signature-genes_clustering.pdf", sep="_"))
+pdf(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering.pdf", sep="_"))
 sig.ht1
 dev.off()
 
@@ -327,7 +327,7 @@ sig.labels <- rowAnnotation(link = row_anno_link(at = c(positions),
                                                  labels = labels),
                             width = unit(2, "cm"))
 
-png(paste(prefix, "DESeq2_rlog-counts_KO-vs-WT_signature-genes_clustering_with-labels.png", sep="_"),
+png(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering_with-labels.png", sep="_"),
     height=500, 
     width=600, 
     units="px")
