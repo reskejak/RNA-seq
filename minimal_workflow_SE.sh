@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # RNA-seq workflow and software commands
 # April 2018
 # Michigan State University
