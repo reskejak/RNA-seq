@@ -37,17 +37,40 @@ raw.counts <- raw.counts.df[, -1]
 raw.counts <- as.matrix(raw.counts)
 rownames(raw.counts) <- ids
 colnames(raw.counts) <- samples$sample
+
 # remove suffix from gene identifiers
 rownames(raw.counts) <- sub("\\..*","", rownames(raw.counts))
 
 rm(raw.counts.df)
 rm(ids)
 
+#################
+# convert normalized counts table from Ensembl IDs to symbols
+converted.raw.counts <- raw.counts
+G_list <- getBM(filters= "ensembl_gene_id", 
+                attributes= c("ensembl_gene_id","external_gene_name"),
+                values=rownames(converted.raw.counts),
+                mart=human.ensembl)
+converted_unique_ids <- G_list[!duplicated(G_list$external_gene_name), ]
+
+# subset raw counts for unique symbols
+converted.raw.counts <- subset(converted.raw.counts, 
+                                      rownames(converted.raw.counts) %in% converted_unique_ids$ensembl_gene_id,
+                                      select = c(0:ncol(converted.raw.counts)))
+rownames(converted.raw.counts) <- converted_unique_ids$external_gene_name
+
+# order gene symbols alphabetically for final table
+converted.raw.counts <- converted.raw.counts[order(rownames(converted.raw.counts)), ]
+
+# write converted raw counts table to CSV
+write.csv(converted.raw.counts, 
+          file=paste(prefix, "DESeq2_converted_raw-counts.csv", sep="_"))
+
 ################
 # DESeq2
 library("digest")
 library("DESeq2")
-dds <- DESeqDataSetFromMatrix(countData = raw.counts,
+dds <- DESeqDataSetFromMatrix(countData = converted.raw.counts,
                               colData = samples,
                               design = ~ condition)
                               
@@ -67,27 +90,6 @@ normalized.counts <- normalized.counts[order(rownames(normalized.counts)), ]
 write.csv(normalized.counts, 
           file=paste(prefix, "DESeq2_filtered_normalized-counts.csv", sep="_"))
 
-#################
-# convert normalized counts table from Ensembl IDs to symbols
-converted.normalized.counts <- normalized.counts
-G_list <- getBM(filters= "ensembl_gene_id", 
-                attributes= c("ensembl_gene_id","external_gene_name"),
-                values=rownames(converted.normalized.counts),
-                mart=human.ensembl)
-converted_unique_ids <- G_list[!duplicated(G_list$external_gene_name), ]
-
-# subset normalized counts for unique symbols
-converted.normalized.counts <- subset(converted.normalized.counts, 
-                                      rownames(converted.normalized.counts) %in% converted_unique_ids$ensembl_gene_id,
-                                      select = c(0:ncol(converted.normalized.counts)))
-rownames(converted.normalized.counts) <- converted_unique_ids$external_gene_name
-
-# order gene symbols alphabetically for final table
-converted.normalized.counts <- converted.normalized.counts[order(rownames(converted.normalized.counts)), ]
-
-# write converted normalized counts table to CSV
-write.csv(converted.normalized.counts, 
-          file=paste(prefix, "DESeq2_filtered_converted_normalized-counts.csv", sep="_"))
 
 #################
 # regularized-logarithm transformation (rlog) for downstream PCA/MDS etc.
@@ -99,35 +101,17 @@ rlog.counts <- assay(rld)
 # order gene identifiers numerically
 rlog.counts <- rlog.counts[order(rownames(rlog.counts)), ]
 
-#################
-# convert rlog.counts table from Ensembl IDs to symbols
-converted.rlog.counts <- rlog.counts
-
-# subset rlog counts for unique symbols
-converted.rlog.counts <- subset(converted.rlog.counts, 
-                                rownames(converted.rlog.counts) %in% converted_unique_ids$ensembl_gene_id,
-                                select = c(0:ncol(converted.rlog.counts)))
-# convert
-rownames(converted.rlog.counts) <- converted_unique_ids$external_gene_name
-
-# order gene symbols alphabetically for final table
-converted.rlog.counts <- converted.rlog.counts[order(rownames(converted.rlog.counts)), ]
-
-# write converted rlog counts to csv
-write.csv(converted.rlog.counts,
-          file=paste(prefix, "DESeq2_filtered_converted_rlog-counts.csv", sep="_"))
-
 #############
 # determine variance distribution and plot
 rld.df <- data.frame(assay(rld))
 rld.var <- apply(rld.df, 1, var)
 rld.df$var <- rld.var
-# png(paste(prefix, "DESeq2_rlog-transformation_variance_density-plot.png", sep="_"),
-#     height=500, 
-#     width=500, 
-#     units="px")
+
+var.plot <- ggplot(rld.df, aes(var)) + geom_density(aes(y=..scaled..)) + xlim(0, 2)
+
+# export as PDF
 pdf(paste(prefix, "DESeq2_rlog-transformation_variance_density-plot.pdf", sep="_"))
-ggplot(rld.df, aes(var)) + geom_density(aes(y=..scaled..)) + xlim(0, 2)
+var.plot
 dev.off()
 
 # subset rld.df by variance for unsupervised clustering
@@ -138,7 +122,7 @@ rld.df.subset <- subset(rld.df,
 rm(rld.df)
 rm(rld.var)
 
-#############         
+#############     
 # write rld$condition levels to treat and control for plotting purposes
 rld$condition <- factor(c(rep("treat", 3),
                           rep("control", 3)))
@@ -146,12 +130,8 @@ rld$condition <- factor(c(rep("treat", 3),
 # plot PCA based on rlog-transformed counts
 pcaData.rlog <- plotPCA(rld, returnData=TRUE)
 percentVar.rlog <- round(100 *attr(pcaData.rlog, "percentVar"))
-# png(paste(prefix, "DESeq2_rlog-transformation_PCA.png", sep="_"),
-#     height=500, 
-#     width=500, 
-#     units="px")
-pdf(paste(prefix, "DESeq2_rlog-transformation_PCA.pdf", sep="_"))
-ggplot(pcaData.rlog, aes(x = PC1, y = PC2, color = condition)) +
+
+pca.plot <- ggplot(pcaData.rlog, aes(x = PC1, y = PC2, color = condition)) +
   geom_point(size =3) +
   xlab(paste0("PC1: ", percentVar.rlog[1], "% variance")) +
   ylab(paste0("PC2: ", percentVar.rlog[2], "% variance")) +
@@ -160,7 +140,12 @@ ggplot(pcaData.rlog, aes(x = PC1, y = PC2, color = condition)) +
   theme(text = element_text(size = 18),
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
+		
+# export as PDF
+pdf(paste(prefix, "DESeq2_rlog-transformation_PCA.pdf", sep="_"))
+pca.plot
 dev.off()
+
 rm(pcaData.rlog)
 rm(percentVar.rlog)
 
@@ -203,56 +188,17 @@ resFinal.df.p.ordered <- resFinal.df[order(resFinal.df$padj.IHW), ]
 write.csv(resFinal.df.p.ordered,
           file=paste(prefix, "DESeq2_treat-vs-control_results.csv", sep="_"))
 
-##########################
-# convert final differential-expression results Ensembl IDs to symbols
-converted.resFinal.df <- resFinal.df
-
-# subset ensembl IDs for unique symbols
-converted.resFinal.df <- subset(converted.resFinal.df, 
-                                rownames(converted.resFinal.df) %in% converted_unique_ids$ensembl_gene_id,
-                                select = c(0:ncol(converted.resFinal.df)))
-# order numerically before final conversion
-converted.resFinal.df <- converted.resFinal.df[order(rownames(converted.resFinal.df)), ]
-rownames(converted.resFinal.df) <- converted_unique_ids$external_gene_name
-
-# order genes by IHW-adjusted p-value
-converted.resFinal.df.p.ordered <- converted.resFinal.df[order(converted.resFinal.df$padj.IHW), ]
-
-# write converted final differential-expression results table to CSV
-write.csv(converted.resFinal.df.p.ordered, 
-          file=paste(prefix, "DESeq2_treat-vs-control_converted_results.csv", sep="_"))
-
 ##############
 # filter by padj.IHW < 0.05 and corrected-|LFC| >= 1
 # adjust these thresholds to match your own needs
-# c
+
 resFinal.df.sig.p.ordered <- subset(resFinal.df.p.ordered, 
                                     (padj.IHW < 0.05) & (abs(shrink.log2FoldChange) >= 1), 
                                     select = c(0:ncol(resFinal.df.p.ordered)))
+
 # write signature to csv
 write.csv(resFinal.df.sig.p.ordered, 
           file=paste(prefix, "DESeq2_treat-vs-control_signature-genes.csv", sep="_"))
-
-#################
-# convert signature genes differential-expression results from ensembl IDs to symbols
-converted.resFinal.df.sig <- resFinal.df.sig.p.ordered
-
-# order gene identifiers numerically before conversion
-converted.resFinal.df.sig <- converted.resFinal.df.sig[order(rownames(converted.resFinal.df.sig)), ]
-
-# convert ensembl IDs to symbols
-G_list_sig <- getBM(filters= "ensembl_gene_id", 
-                    attributes= c("ensembl_gene_id","external_gene_name"),
-                    values=rownames(converted.resFinal.df.sig),
-                    mart=human.ensembl)
-rownames(converted.resFinal.df.sig) <- G_list_sig$external_gene_name
-
-# order genes by IHW-adjusted p-value
-converted.resFinal.df.sig.p.ordered <- converted.resFinal.df.sig[order(converted.resFinal.df.sig$padj.IHW), ]
-
-# write converted signature to csv
-write.csv(converted.resFinal.df.sig.p.ordered, 
-          file=paste(prefix, "DESeq2_treat-vs-control_converted_signature-genes.csv", sep="_"))
 
 ######################
 # subset rlog.counts by signature genes for downstream plotting, etc.
@@ -276,21 +222,18 @@ library("circlize")
 library("ComplexHeatmap")
 
 # UNSUPERVISED CLUSTERING
-# rld.df.subset = var > 0.05 genes
+var.threshold = 0.05
+# rld.df.subset = [var > threshold] genes
 # adjust labeling to match selected variance threshold
 centered.scaled.rld.df.subset <- t(scale(t(rld.df.subset)))
 Unsup <- Heatmap(centered.scaled.rld.df.subset, 
                  clustering_distance_rows = "euclidean",
                  width= unit(8, "cm"),
-                 column_title = paste("Unsupervised clustering (var > 0.05; ", nrow(rld.df.subset), " genes)", sep=""),
+                 column_title = paste("Unsupervised clustering (var > ", var.threshold, "; ", nrow(rld.df.subset), " genes)", sep=""),
                  name="scaled rlog(counts)",
                  show_row_names=FALSE)
 
-# png(paste(prefix, "DESeq2_rlog-counts_var005_Unsupervised_clustering.png", sep="_"),
-#     height=600, 
-#     width=600, 
-#     units="px")
-pdf(paste(prefix, "DESeq2_rlog-counts_var005_Unsupervised_clustering.pdf", sep="_"))
+pdf(paste(prefix, "DESeq2_rlog-counts", var.threshold, "Unsupervised_clustering.pdf", sep="_"))
 Unsup
 dev.off()
 
@@ -307,10 +250,6 @@ sig.ht1 <- Heatmap(centered.scaled.converted.rlog.counts.sig,
                    name="scaled rlog(counts)",
                    width = unit(8, "cm"))
                           
-# png(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering.png", sep="_"),
-#     height=500, 
-#     width=500, 
-#     units="px")
 pdf(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering.pdf", sep="_"))
 sig.ht1
 dev.off()
@@ -329,9 +268,6 @@ sig.labels <- rowAnnotation(link = row_anno_link(at = c(positions),
                                                  labels = labels),
                             width = unit(2, "cm"))
 
-png(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering_with-labels.png", sep="_"),
-    height=500, 
-    width=600, 
-    units="px")
+pdf(paste(prefix, "DESeq2_rlog-counts_treat-vs-control_signature-genes_clustering_with-labels.pdf", sep="_"))
 sig.ht1 + sig.labels
 dev.off()
