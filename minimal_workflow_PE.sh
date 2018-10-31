@@ -63,8 +63,8 @@ STAR --runMode genomeGenerate \
 --genomeFastaFiles ${REFDIR}/genome.fa \
 --sjdbGTFfile ${REFDIR}/annotation.gff3 \
 --sjdbGTFtagExonParentTranscript Parent \
---sjdbOverhang 149
-# note: --sjdbOverang should equal [read length]-1, or 150-1 = 149 (for PE 150bp reads)
+--sjdbOverhang 74
+# note: --sjdbOverang should equal [read length]-1, or 75-1 = 74 (for PE 75bp reads)
 # note: "--sjdbGTFtagExonParentTranscript Parent" must be used with gff3 file
 # submit as job; takes <20 minutes but utilizes extensive resources
 
