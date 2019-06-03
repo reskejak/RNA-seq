@@ -16,7 +16,7 @@ samples=("foo_treat1 foo_treat2 foo_treatn foo_control1 foo_control2 foo_control
 
 cd ${DIR}
 
-# remove excess filename architecture, paired end reads
+# remove excess filename architecture, single end reads
 for i in $samples;
 do mv ${i}_L000_R1_001.fastq.gz ${i}_R1.fastq.gz;
 done
