@@ -33,7 +33,7 @@ mkdir ${DIR}/trimmed
 
 # trim galore
 for i in $samples;
-do trim_galore ${i}_R1.fastq.gz -o trimmed/ ;
+do trim_galore ${i}_R1.fastq.gz -o trimmed/;
 done
 
 cd ${DIR}/trimmed
