@@ -95,7 +95,7 @@ dds <- DESeq(dds)
 # coef=2: "condition_Treat_vs_Control"
 
 res <- results(dds, name="condition_Treat_vs_Control") # DGE results
-resLFC <- lfcShrink(dds, coef=3) # log2 fold change shrinkage
+resLFC <- lfcShrink(dds, coef=2) # log2 fold change shrinkage
 res.IHW <- results(dds, name="condition_Treat_vs_Control", filterFun=ihw) # independent hypothesis weighting for p-value correction
 
 ################
