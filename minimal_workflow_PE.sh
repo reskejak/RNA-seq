@@ -66,10 +66,8 @@ STAR --runMode genomeGenerate \
 --sjdbOverhang 74
 # note: --sjdbOverang should equal [read length]-1, or 75-1 = 74 (for PE 75bp reads)
 # note: "--sjdbGTFtagExonParentTranscript Parent" must be used with gff3 file
-# submit as job; takes <20 minutes but utilizes extensive resources
 
 # align to indexed genome with annotation
-# too long for 2 hour wall limit, so submit qsub job
 cd ${DIR}/trimmed
 for i in $samples;
 do gunzip ${i}_R1_val_1.fq.gz;
