@@ -1,7 +1,7 @@
 # RNA-seq
 Basic workflow for RNA-seq analysis.
 
-#### minimal_workflow_PE.sh, minimal_workflow_SE.sh, and downstream_analysis.R
+#### minimal_workflow_PE.sh, minimal_workflow_SE.sh, and DESeq2_workflow.R
 Work-in-progress compilation of various commands and tools intended for an RNA-seq analysis workflow, largely based on [Michael Love's Bioconductor workflow](https://www.bioconductor.org/help/workflows/rnaseqGene/).
 
 Attempt to run each command individually or in blocks after editing to match your own data architecture.
