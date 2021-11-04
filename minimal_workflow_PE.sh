@@ -17,15 +17,15 @@ samples=("foo_treat1 foo_treat2 foo_treatn foo_control1 foo_control2 foo_control
 cd ${DIR}
 
 # remove excess filename architecture, paired end reads
-for i in $samples;
-do mv ${i}_L000_R1_001.fastq.gz ${i}_R1.fastq.gz;
+for i in $samples; do
+mv ${i}_L000_R1_001.fastq.gz ${i}_R1.fastq.gz;
 mv ${i}_L000_R2_001.fastq.gz ${i}_R2.fastq.gz
 done
 
 #########################
 # fastqc on raw files
-for i in $samples;
-do fastqc ${i}_R1.fastq.gz;
+for i in $samples; do
+fastqc ${i}_R1.fastq.gz;
 fastqc ${i}_R2.fastq.gz
 done
 
@@ -34,10 +34,8 @@ done
 mkdir ${DIR}/trimmed
 
 # trim galore
-for i in $samples;
-do trim_galore \
---paired \
--o trimmed/ \
+for i in $samples; do
+trim_galore --paired -o trimmed/ \
 ${i}_R1.fastq.gz ${i}_R2.fastq.gz;
 done
 
@@ -45,8 +43,8 @@ cd ${DIR}/trimmed
 
 ##########################
 # fastqc on trimmed files
-for i in $samples;
-do fastqc ${i}_R1_val_1.fq.gz;
+for i in $samples; do
+fastqc ${i}_R1_val_1.fq.gz;
 fastqc ${i}_R2_val_2.fq.gz;
 done
 
@@ -69,20 +67,15 @@ STAR --runMode genomeGenerate \
 
 # align to indexed genome with annotation
 cd ${DIR}/trimmed
-for i in $samples;
-do gunzip ${i}_R1_val_1.fq.gz;
-gunzip ${i}_R2_val_2.fq.gz
+for i in $samples; do
 STAR --runMode alignReads \
 --runThreadN 16 \
 --genomeDir ${REFDIR}/genome_STAR_index \
---readFilesIn ${i}_R1_val_1.fq ${i}_R2_val_2.fq \
+--readFilesIn ${i}_R1_val_1.fq.gz ${i}_R2_val_2.fq.gz \
 --outFileNamePrefix ${i} \
 --outSAMtype BAM SortedByCoordinate \
 --quantMode GeneCounts;
-gzip ${i}_R1_val_1.fq;
-gzip ${i}_R2_val_2.fq;
 done
-# note: software not currently working with zipped files, call gunzip first...
 # note: --outSAMtype can be "SAM", "BAM Unsorted", or "BAM SortedByCoordinate"
 # note: --quantMode can either be "GeneCounts" or "TranscriptomeSAM"
 # Gene Counts: "count reads per gene"
