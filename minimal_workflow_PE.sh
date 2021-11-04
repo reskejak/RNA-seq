@@ -106,7 +106,7 @@ colnames(counts) <- c("foo_treat1", "foo_treat2", "foo_treatn",
                       "foo_control1", "foo_control2", "foo_controln")			
 
 # remove header rows
-counts <- counts[-1:-4, ]
+counts <- counts[-c(1:4), ]
 
 # write output table for downstream analysis via DESeq2
 write.csv(counts, file="foo_RNA_raw_counts.csv")
