@@ -76,6 +76,7 @@ STAR --runMode alignReads \
 --outSAMtype BAM SortedByCoordinate \
 --quantMode GeneCounts;
 done
+# if STAR giving you errors, try gunzipping fq.gz files first
 # note: --outSAMtype can be "SAM", "BAM Unsorted", or "BAM SortedByCoordinate"
 # note: --quantMode can either be "GeneCounts" or "TranscriptomeSAM"
 # Gene Counts: "count reads per gene"
