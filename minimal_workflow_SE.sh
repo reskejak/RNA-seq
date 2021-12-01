@@ -17,14 +17,14 @@ samples=("foo_treat1 foo_treat2 foo_treatn foo_control1 foo_control2 foo_control
 cd ${DIR}
 
 # remove excess filename architecture, single end reads
-for i in $samples;
-do mv ${i}_L000_R1_001.fastq.gz ${i}_R1.fastq.gz;
+for i in $samples; do
+mv ${i}_L000_R1_001.fastq.gz ${i}_R1.fastq.gz;
 done
 
 #########################
 # fastqc on raw files
-for i in $samples;
-do fastqc ${i}_R1.fastq.gz;
+for i in $samples; do
+fastqc ${i}_R1.fastq.gz;
 done
 
 ##########################
@@ -32,16 +32,16 @@ done
 mkdir ${DIR}/trimmed
 
 # trim galore
-for i in $samples;
-do trim_galore ${i}_R1.fastq.gz -o trimmed/;
+for i in $samples; do
+trim_galore ${i}_R1.fastq.gz -o trimmed/;
 done
 
 cd ${DIR}/trimmed
 
 ##########################
 # fastqc on trimmed files
-for i in $samples;
-do fastqc ${i}_R1_trimmed.fq.gz;
+for i in $samples; do
+fastqc ${i}_R1_trimmed.fq.gz;
 done
 
 ##########################
@@ -65,8 +65,8 @@ STAR --runMode genomeGenerate \
 # align to indexed genome with annotation
 # too long for 2 hour wall limit, so submit qsub job
 cd ${DIR}/trimmed
-for i in $samples;
-do gunzip ${i}_R1_trimmed.fq.gz;
+for i in $samples; do
+gunzip ${i}_R1_trimmed.fq.gz;
 STAR --runMode alignReads \
 --runThreadN 16 \
 --genomeDir ${REFDIR}/genome_STAR_index \
@@ -74,7 +74,7 @@ STAR --runMode alignReads \
 --outFileNamePrefix ${i} \
 --outSAMtype BAM SortedByCoordinate \
 --quantMode GeneCounts;
-gzip ${i}_R1_trimmed.fq
+gzip ${i}_R1_trimmed.fq;
 done
 # note: software not currently working with zipped files, call gunzip first...
 # note: --outSAMtype can be "SAM", "BAM Unsorted", or "BAM SortedByCoordinate"
